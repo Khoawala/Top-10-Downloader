@@ -11,6 +11,9 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.appindexing.Action;
@@ -23,6 +26,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,19 +35,31 @@ public class MainActivity extends AppCompatActivity {
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
     private GoogleApiClient client;
-    private TextView xmlTextView;
+    private String mFileData;
+    private Button btnParse;
+    private ListView listApps;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        btnParse = (Button) findViewById(R.id.btnParse);
+        btnParse.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //ToDo: Add parse activation code.
+                ParseApplication parseApplication  = new ParseApplication(mFileData);
+                parseApplication.process();
+                ArrayAdapter<Application> arrayAdapter = new ArrayAdapter<Application>(
+                        MainActivity.this, R.layout.list_item, parseApplication.getApplications());
+                listApps.setAdapter(arrayAdapter);
+            }
+        });
 
-        xmlTextView = (TextView) findViewById(R.id.xmlTextView);
+        listApps = (ListView) findViewById(R.id.xmlListView);
 
         DownloadData downloadData = new DownloadData();
         downloadData.execute("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml");
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -117,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class DownloadData extends AsyncTask<String, Void, String> {
-        String mFileData;
+
 
         public DownloadData() {
             super();
@@ -136,7 +152,6 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             Log.d("DownloadData", "Result was " + result);
-            xmlTextView.setText(mFileData);
         }
 
         private String downloadXMLFile(String urlPath) {
